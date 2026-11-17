@@ -1,0 +1,6 @@
+src/Makevars
+configure.log
+src/*.o
+src/*.so
+src/*.a
+src/**/*.o
