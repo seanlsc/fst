@@ -22,3 +22,4 @@ LZ4/LICENSE$
 ^\.github$
 ^CRAN-SUBMISSION$
 ^fstcore$
+^CONCAT\.md$
