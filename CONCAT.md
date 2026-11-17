@@ -91,5 +91,3 @@ ranges.
 * Column names, types and order must be identical in all files.
 * Each input chunk stays a separate chunk with its own compression settings. Many small chunks work, but if needed a
   "compact" step (read and rewrite) can be added later.
-* In-place appending (`append = TRUE`) is not implemented. The format allows it: legacy files have 3 free chunk
-  slots, and an index with spare slots can be reserved.
