@@ -17,6 +17,10 @@ fstretrieve <- function(fileName, columnSelection, startRow, endRow) {
     .Call(`_fstcore_fstretrieve`, fileName, columnSelection, startRow, endRow)
 }
 
+fstconcat <- function(inputFiles, outputFile) {
+    .Call(`_fstcore_fstconcat`, inputFiles, outputFile)
+}
+
 getnrofthreads <- function() {
     .Call(`_fstcore_getnrofthreads`)
 }

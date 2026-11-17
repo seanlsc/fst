@@ -104,6 +104,26 @@ namespace fstcore {
         return Rcpp::as<SEXP >(rcpp_result_gen);
     }
 
+    inline SEXP fstconcat(SEXP inputFiles, Rcpp::String outputFile) {
+        typedef SEXP(*Ptr_fstconcat)(SEXP,SEXP);
+        static Ptr_fstconcat p_fstconcat = NULL;
+        if (p_fstconcat == NULL) {
+            validateSignature("SEXP(*fstconcat)(SEXP,Rcpp::String)");
+            p_fstconcat = (Ptr_fstconcat)R_GetCCallable("fstcore", "_fstcore_fstconcat");
+        }
+        RObject rcpp_result_gen;
+        {
+            rcpp_result_gen = p_fstconcat(Shield<SEXP>(Rcpp::wrap(inputFiles)), Shield<SEXP>(Rcpp::wrap(outputFile)));
+        }
+        if (rcpp_result_gen.inherits("interrupted-error"))
+            throw Rcpp::internal::InterruptedException();
+        if (Rcpp::internal::isLongjumpSentinel(rcpp_result_gen))
+            throw Rcpp::LongjumpException(rcpp_result_gen);
+        if (rcpp_result_gen.inherits("try-error"))
+            throw Rcpp::exception(Rcpp::as<std::string>(rcpp_result_gen).c_str());
+        return Rcpp::as<SEXP >(rcpp_result_gen);
+    }
+
     inline SEXP fsthasher(SEXP rawVec, SEXP seed, SEXP blockHash) {
         typedef SEXP(*Ptr_fsthasher)(SEXP,SEXP,SEXP);
         static Ptr_fsthasher p_fsthasher = NULL;

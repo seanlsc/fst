@@ -24,19 +24,30 @@
 
 // Version of fst format
 #define FST_VERSION_MAJOR    0                  // for breaking interface changes
-#define FST_VERSION_MINOR    1                  // for new (non-breaking) interface capabilities
-#define FST_VERSION_RELEASE  9                  // for tweaks, bug-fixes, or development
+#define FST_VERSION_MINOR    2                  // for new (non-breaking) interface capabilities
+#define FST_VERSION_RELEASE  0                  // for tweaks, bug-fixes, or development
 
 // Note that the release version number can change without affecting read/write cycles
 #define FST_VERSION          (FST_VERSION_MAJOR * 256 + FST_VERSION_MINOR)
 #define FST_COMPRESS_VERSION 1
+
+// Minimum reader version required for a file. Files with a single (vertical) data chunk keep the
+// v0.1 requirement so they can still be read by older fst versions. Files with multiple data chunks
+// (for example the result of a concatenation) require a v0.2 reader.
+// Note: by convention even format numbers are development versions, a released
+// multi chunk format should use an odd number (and FST_VERSION_MINOR updated accordingly).
+#define FST_VERSION_SINGLE_CHUNK 1
+#define FST_VERSION_MULTI_CHUNK  2
 
 #define FST_MAGIC_NUMBER     0x50414150         // magic number and signature of the fst format
 #define TABLE_META_SIZE      48                 // size of table meta-data block
 #define FST_FILE_ID          0xa91c12f8b245a71d // identifies a fst file or memory block
 #define FST_HASH_SEED        912824571          // default seed used for xxhash algorithm
 #define CHUNKSET_HEADER_SIZE 80                 // size of chunkset header
-#define CHUNK_INDEX_SIZE     96                 // size of chunk index header
+#define CHUNK_INDEX_SIZE     96                 // size of chunk index header with the default 4 chunk slots
+#define CHUNK_INDEX_HEAD     32                 // size of chunk index header without chunk slots
+#define CHUNK_SLOTS_DEFAULT  4                  // default number of chunk slots in the chunk index
+#define CHUNK_SLOTS_MAX      65535              // maximum number of chunk slots (stored as unsigned short)
 #define DATA_INDEX_SIZE      24                 // size of data index header
 #define CHAR_HEADER_SIZE     8                  // meta data header size
 #define CHAR_INDEX_SIZE      16                 // size of 1 index entry
@@ -94,6 +105,9 @@
 #define FSTERROR_COMP_HEADER         "Incorrect header information found in raw vector."
 #define FSTERROR_COMP_NO_DATA        "Source contains no data."
 #define FSTERROR_COMP_FUTURE_VERSION "Data has been compressed with a newer version than the current."
+#define FSTERROR_CONCAT_NO_INPUT     "No input files were specified for concatenation."
+#define FSTERROR_CONCAT_MAX_CHUNKS   "The concatenated file would contain more than 65535 data chunks."
+#define FSTERROR_CONCAT_SAME_FILE    "The output file can not be one of the input files."
 
 #define FST_NA_INT					         0x80000000
 

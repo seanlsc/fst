@@ -29,6 +29,7 @@
 #include <interface/ifsttable.h>
 #include <interface/icolumnfactory.h>
 #include <interface/fststore.h>
+#include <interface/fstchunks.h>
 
 #include <fst_error.h>
 #include <fst_table.h>
@@ -182,6 +183,7 @@ SEXP fstmetadata(String fileName)
       _["nNofCols"]         = fstStore.nrOfCols,
       _["nrOfRows"]         = *(fstStore.p_nrOfRows),
       _["fstVersion"]       = fstStore.tableVersionMax,
+      _["nrOfChunks"]       = static_cast<double>(fstStore.nrOfChunks),
       _["keyLength"]        = fstStore.keyLength,
       _["colBaseType"]      = colBaseType,
       _["colType"]          = colAttributeTypes,
@@ -197,6 +199,7 @@ SEXP fstmetadata(String fileName)
       _["nrOfCols"]        = fstStore.nrOfCols,
       _["nrOfRows"]        = *fstStore.p_nrOfRows,
       _["fstVersion"]      = fstStore.tableVersionMax,
+      _["nrOfChunks"]      = static_cast<double>(fstStore.nrOfChunks),
       _["keyLength"]       = fstStore.keyLength,
       _["colBaseType"]     = colBaseType,
       _["colType"]         = colAttributeTypes,
@@ -309,4 +312,43 @@ SEXP fstretrieve(String fileName, SEXP columnSelection, SEXP startRow, SEXP endR
     _["keyNames"]   = keyNames,
     _["keyIndex"]   = keyIndex,
     _["resTable"]   = tableReader.ResTable());
+}
+
+
+SEXP fstconcat(SEXP inputFiles, String outputFile)
+{
+	if (!Rf_isString(inputFiles) || Rf_length(inputFiles) == 0)
+	{
+		return fst_error("Parameter 'inputFiles' should be a non-empty character vector");
+	}
+
+	vector<string> inputs;
+	const R_xlen_t nrOfInputs = Rf_xlength(inputFiles);
+
+	for (R_xlen_t fileNr = 0; fileNr < nrOfInputs; ++fileNr)
+	{
+		SEXP fileName = STRING_ELT(inputFiles, fileNr);
+
+		if (fileName == NA_STRING)
+		{
+			return fst_error("Parameter 'inputFiles' contains missing values");
+		}
+
+		inputs.push_back(string(CHAR(fileName)));
+	}
+
+	try
+	{
+		FstConcat(inputs, string(outputFile.get_cstring()));
+	}
+	catch (const std::runtime_error& e)
+	{
+		return fst_error(e.what());
+	}
+	catch (...)
+	{
+		return fst_error("An unknown C++ error occured in the fstlib library");
+	}
+
+	return R_NilValue;
 }

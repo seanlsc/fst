@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <memory>
+#include <cstdint>
 
 #include <interface/icolumnfactory.h>
 #include <interface/ifsttable.h>
@@ -46,6 +47,7 @@ class FstStore
 
     unsigned int tableVersionMax;
     int nrOfCols, keyLength;
+    uint64_t nrOfChunks = 1;  // number of (vertical) data chunks, set by fstMeta
 
     FstStore(std::string fstFile);
 

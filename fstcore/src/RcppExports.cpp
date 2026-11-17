@@ -150,6 +150,40 @@ RcppExport SEXP _fstcore_fstretrieve(SEXP fileNameSEXP, SEXP columnSelectionSEXP
     UNPROTECT(1);
     return rcpp_result_gen;
 }
+// fstconcat
+SEXP fstconcat(SEXP inputFiles, Rcpp::String outputFile);
+static SEXP _fstcore_fstconcat_try(SEXP inputFilesSEXP, SEXP outputFileSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< SEXP >::type inputFiles(inputFilesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type outputFile(outputFileSEXP);
+    rcpp_result_gen = Rcpp::wrap(fstconcat(inputFiles, outputFile));
+    return rcpp_result_gen;
+END_RCPP_RETURN_ERROR
+}
+RcppExport SEXP _fstcore_fstconcat(SEXP inputFilesSEXP, SEXP outputFileSEXP) {
+    SEXP rcpp_result_gen;
+    {
+        rcpp_result_gen = PROTECT(_fstcore_fstconcat_try(inputFilesSEXP, outputFileSEXP));
+    }
+    Rboolean rcpp_isInterrupt_gen = Rf_inherits(rcpp_result_gen, "interrupted-error");
+    if (rcpp_isInterrupt_gen) {
+        UNPROTECT(1);
+        Rf_onintr();
+    }
+    bool rcpp_isLongjump_gen = Rcpp::internal::isLongjumpSentinel(rcpp_result_gen);
+    if (rcpp_isLongjump_gen) {
+        Rcpp::internal::resumeJump(rcpp_result_gen);
+    }
+    Rboolean rcpp_isError_gen = Rf_inherits(rcpp_result_gen, "try-error");
+    if (rcpp_isError_gen) {
+        SEXP rcpp_msgSEXP_gen = Rf_asChar(rcpp_result_gen);
+        UNPROTECT(1);
+        Rf_error("%s", CHAR(rcpp_msgSEXP_gen));
+    }
+    UNPROTECT(1);
+    return rcpp_result_gen;
+}
 // fsthasher
 SEXP fsthasher(SEXP rawVec, SEXP seed, SEXP blockHash);
 static SEXP _fstcore_fsthasher_try(SEXP rawVecSEXP, SEXP seedSEXP, SEXP blockHashSEXP) {
@@ -434,6 +468,7 @@ static int _fstcore_RcppExport_validate(const char* sig) {
         signatures.insert("SEXP(*fststore)(Rcpp::String,SEXP,SEXP,SEXP)");
         signatures.insert("SEXP(*fstmetadata)(Rcpp::String)");
         signatures.insert("SEXP(*fstretrieve)(Rcpp::String,SEXP,SEXP,SEXP)");
+        signatures.insert("SEXP(*fstconcat)(SEXP,Rcpp::String)");
         signatures.insert("SEXP(*fsthasher)(SEXP,SEXP,SEXP)");
         signatures.insert("SEXP(*fstcomp)(SEXP,SEXP,SEXP,SEXP)");
         signatures.insert("SEXP(*fstdecomp)(SEXP)");
@@ -452,6 +487,7 @@ RcppExport SEXP _fstcore_RcppExport_registerCCallable() {
     R_RegisterCCallable("fstcore", "_fstcore_fststore", (DL_FUNC)_fstcore_fststore_try);
     R_RegisterCCallable("fstcore", "_fstcore_fstmetadata", (DL_FUNC)_fstcore_fstmetadata_try);
     R_RegisterCCallable("fstcore", "_fstcore_fstretrieve", (DL_FUNC)_fstcore_fstretrieve_try);
+    R_RegisterCCallable("fstcore", "_fstcore_fstconcat", (DL_FUNC)_fstcore_fstconcat_try);
     R_RegisterCCallable("fstcore", "_fstcore_fsthasher", (DL_FUNC)_fstcore_fsthasher_try);
     R_RegisterCCallable("fstcore", "_fstcore_fstcomp", (DL_FUNC)_fstcore_fstcomp_try);
     R_RegisterCCallable("fstcore", "_fstcore_fstdecomp", (DL_FUNC)_fstcore_fstdecomp_try);
@@ -469,6 +505,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_fstcore_fststore", (DL_FUNC) &_fstcore_fststore, 4},
     {"_fstcore_fstmetadata", (DL_FUNC) &_fstcore_fstmetadata, 1},
     {"_fstcore_fstretrieve", (DL_FUNC) &_fstcore_fstretrieve, 4},
+    {"_fstcore_fstconcat", (DL_FUNC) &_fstcore_fstconcat, 2},
     {"_fstcore_fsthasher", (DL_FUNC) &_fstcore_fsthasher, 3},
     {"_fstcore_fstcomp", (DL_FUNC) &_fstcore_fstcomp, 4},
     {"_fstcore_fstdecomp", (DL_FUNC) &_fstcore_fstdecomp, 1},
