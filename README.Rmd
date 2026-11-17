@@ -140,6 +140,20 @@ The _fst_ file format provides full random access to stored datasets. You can re
 
 This reads rows 2000 to 5000 from columns _Logical_ and _Factor_ without actually touching any other data in the stored file. That means that a subset can be read from file **without reading the complete file first**. This is different from, say, _readRDS_ or _read\_feather_ where you have to read the complete file or column before you can make a subset.
 
+## Concatenating files
+
+Files with identical columns can be concatenated into a new _fst_ file **without reading the data into memory**:
+
+```{r, eval = FALSE}
+concat_fst(c("dataset_2023.fst", "dataset_2024.fst"), "dataset_all.fst")
+```
+
+The compressed data blocks of the input files are copied as-is, so nothing is decompressed or recompressed and
+memory usage stays at a few megabytes, irrespective of file size. The result is identical to reading the files,
+combining them with `rbind` and writing the result with `write_fst`. Factor columns may have different levels;
+the levels are merged. Files resulting from a concatenation of multiple files can only be read by
+_fst_ versions that support multi-chunk files (fstcore >= 0.10.0.9000).
+
 ## Compression
 
 For compression the excellent and speedy [LZ4][lz4Repo] and [ZSTD][zstdRepo] compression algorithms are used. These compressors (in combination with type-specific bit filters), enable _fst_ to achieve high compression speeds at reasonable compression factors. The compression factor can be tuned from 0 (minimum) to 100 (maximum):

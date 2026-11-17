@@ -13,6 +13,10 @@ fstretrieve <- function(fileName, columnSelection, startRow, endRow) {
     .Call(`_fst_fstretrieve`, fileName, columnSelection, startRow, endRow)
 }
 
+fstconcat <- function(inputFiles, outputFile) {
+    .Call(`_fst_fstconcat`, inputFiles, outputFile)
+}
+
 fsthasher <- function(rawVec, seed, blockHash) {
     .Call(`_fst_fsthasher`, rawVec, seed, blockHash)
 }

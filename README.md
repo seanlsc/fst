@@ -121,6 +121,20 @@ first**. This is different from, say, *readRDS* or *read_feather* where
 you have to read the complete file or column before you can make a
 subset.
 
+## Concatenating files
+
+Files with identical columns can be concatenated into a new _fst_ file **without reading the data into memory**:
+
+``` r
+concat_fst(c("dataset_2023.fst", "dataset_2024.fst"), "dataset_all.fst")
+```
+
+The compressed data blocks of the input files are copied as-is, so nothing is decompressed or recompressed and
+memory usage stays at a few megabytes, irrespective of file size. The result is identical to reading the files,
+combining them with `rbind` and writing the result with `write_fst`. Factor columns may have different levels;
+the levels are merged. Files resulting from a concatenation of multiple files can only be read by
+_fst_ versions that support multi-chunk files (fstcore >= 0.10.0.9000).
+
 ## Compression
 
 For compression the excellent and speedy

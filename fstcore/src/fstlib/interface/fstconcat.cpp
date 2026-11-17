@@ -356,7 +356,7 @@ void ValidateInputFile(const FstInputFile &first, const FstInputFile &input)
 
 		if (colScale1[colNr] != colScale2[colNr])
 		{
-			throw(runtime_error(position + " ('" + name1 + "') has a different scale in file '" + first.path
+			throw(runtime_error(position + " ('" + name1 + "') has a different scale or time unit in file '" + first.path
 				+ "' and file '" + input.path + "'."));
 		}
 	}

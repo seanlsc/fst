@@ -49,6 +49,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// fstconcat
+SEXP fstconcat(SEXP inputFiles, Rcpp::String outputFile);
+RcppExport SEXP _fst_fstconcat(SEXP inputFilesSEXP, SEXP outputFileSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< SEXP >::type inputFiles(inputFilesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::String >::type outputFile(outputFileSEXP);
+    rcpp_result_gen = Rcpp::wrap(fstconcat(inputFiles, outputFile));
+    return rcpp_result_gen;
+END_RCPP
+}
 // fsthasher
 SEXP fsthasher(SEXP rawVec, SEXP seed, SEXP blockHash);
 RcppExport SEXP _fst_fsthasher(SEXP rawVecSEXP, SEXP seedSEXP, SEXP blockHashSEXP) {
@@ -133,6 +145,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_fst_fststore", (DL_FUNC) &_fst_fststore, 4},
     {"_fst_fstmetadata", (DL_FUNC) &_fst_fstmetadata, 1},
     {"_fst_fstretrieve", (DL_FUNC) &_fst_fstretrieve, 4},
+    {"_fst_fstconcat", (DL_FUNC) &_fst_fstconcat, 2},
     {"_fst_fsthasher", (DL_FUNC) &_fst_fsthasher, 3},
     {"_fst_fstcomp", (DL_FUNC) &_fst_fstcomp, 4},
     {"_fst_fstdecomp", (DL_FUNC) &_fst_fstdecomp, 1},

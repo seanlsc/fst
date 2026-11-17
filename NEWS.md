@@ -3,6 +3,14 @@
 
 ## Enhancements
 
+* New function `concat_fst()` row-binds multiple _fst_ files into a new _fst_ file without loading the data into
+  memory. The compressed column data is copied as-is, so concatenation is limited by disk speed and uses a constant
+  (small) amount of memory. Column names and types (including attributes such as time zones) must be identical for
+  all files, factor levels are merged. Keys are not retained.
+
+* `metadata_fst()` reports the number of data chunks in a file (`nrOfChunks`). Files created by `concat_fst()` from
+  multiple non-empty files contain multiple data chunks and require fstcore >= 0.10.0.9000 to be read.
+
 ## Bugs solved
 
 ## Library updates

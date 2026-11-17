@@ -1,4 +1,20 @@
 
+# fstcore 0.10.0.9000 (in development)
+
+## Enhancements
+
+* The _fst_ format now supports tables stored as multiple (vertical) data chunks. The chunk index, which already
+  reserved 4 chunk slots of which only the first was used, now holds a variable number of slots (up to 65535) and
+  the number of chunks in use. Row ranges spanning multiple chunks can be read for all column types. Factor levels
+  are merged over all chunks. Files with a single data chunk are written exactly as before and remain readable by
+  older versions; multi-chunk files have a minimum reader version of 2 so older readers refuse them with an
+  'Incompatible fst file' error instead of reading incorrect data.
+
+* New C++ method `FstConcat()` and exported R/C++ function `fstconcat()` that concatenate _fst_ files at the block
+  level: headers are validated (column names, types, attributes, scales and annotations) after which the data chunks
+  of all input files are copied byte-for-byte, only patching absolute file offsets. Keys are not retained.
+
+* `fstmetadata()` returns the number of data chunks (`nrOfChunks`).
 
 # fstcore 0.10.0
 

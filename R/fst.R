@@ -119,7 +119,7 @@ metadata_fst <- function(path, old_format = FALSE) {
     path = full_path, nrOfRows = metadata$nrOfRows,
     keys = metadata$keyNames, columnNames = metadata$colNames,
     columnBaseTypes = metadata$colBaseType, keyColIndex = metadata$keyColIndex,
-    columnTypes = metadata$colType
+    columnTypes = metadata$colType, nrOfChunks = metadata$nrOfChunks
   )
   class(col_info) <- "fstmetadata"
 
@@ -130,7 +130,14 @@ metadata_fst <- function(path, old_format = FALSE) {
 #' @export
 print.fstmetadata <- function(x, ...) {
   cat("<fst file>\n")
-  cat(x$nrOfRows, " rows, ", length(x$columnNames), " columns (", basename(x$path),
+
+  # files created with concat_fst can have multiple data chunks
+  chunk_info <- ""
+  if (!is.null(x$nrOfChunks) && x$nrOfChunks > 1) {
+    chunk_info <- paste0(", ", x$nrOfChunks, " data chunks")
+  }
+
+  cat(x$nrOfRows, " rows, ", length(x$columnNames), " columns", chunk_info, " (", basename(x$path),
     ")\n\n",
     sep = ""
   )
