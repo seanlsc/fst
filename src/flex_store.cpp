@@ -50,5 +50,5 @@ SEXP fstretrieve(Rcpp::String fileName, SEXP columnSelection, SEXP startRow, SEX
 // [[Rcpp::export]]
 SEXP fstconcat(SEXP inputFiles, Rcpp::String outputFile)
 {
-	return fstcore::fstconcat(inputFiles, outputFile);
+  return fstcore::fstconcat(inputFiles, outputFile);
 }

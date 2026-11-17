@@ -22,11 +22,11 @@
 
 # absolute path of a (possibly not yet existing) file
 full_file_path <- function(path) {
-	if (file.exists(path)) {
-		return(normalizePath(path, mustWork = TRUE))
-	}
+  if (file.exists(path)) {
+    return(normalizePath(path, mustWork = TRUE))
+  }
 
-	file.path(normalizePath(dirname(path), mustWork = FALSE), basename(path))
+  file.path(normalizePath(dirname(path), mustWork = FALSE), basename(path))
 }
 
 
@@ -73,30 +73,30 @@ full_file_path <- function(path) {
 #' read_fst(fst_result)
 #' @export
 concat_fst <- function(x, path) {
-	if (!is.character(x) || length(x) == 0 || anyNA(x)) {
-		stop("Please specify a character vector with the paths of the fst files to concatenate.")
-	}
+  if (!is.character(x) || length(x) == 0 || anyNA(x)) {
+    stop("Please specify a character vector with the paths of the fst files to concatenate.")
+  }
 
-	if (!is.character(path) || length(path) != 1 || is.na(path)) stop("Please specify a correct path.")
+  if (!is.character(path) || length(path) != 1 || is.na(path)) stop("Please specify a correct path.")
 
-	missing_files <- x[!file.exists(x)]
+  missing_files <- x[!file.exists(x)]
 
-	if (length(missing_files) > 0) {
-		stop("File(s) not found: ", paste0("'", missing_files, "'", collapse = ", "))
-	}
+  if (length(missing_files) > 0) {
+    stop("File(s) not found: ", paste0("'", missing_files, "'", collapse = ", "))
+  }
 
-	input_paths <- normalizePath(x, mustWork = TRUE)
-	output_path <- full_file_path(path)
+  input_paths <- normalizePath(x, mustWork = TRUE)
+  output_path <- full_file_path(path)
 
-	if (output_path %in% input_paths) {
-		stop("The result file can not be one of the input files.")
-	}
+  if (output_path %in% input_paths) {
+    stop("The result file can not be one of the input files.")
+  }
 
-	res <- fstconcat(input_paths, output_path)
+  res <- fstconcat(input_paths, output_path)
 
-	if (inherits(res, "fst_error")) {
-		stop(res)
-	}
+  if (inherits(res, "fst_error")) {
+    stop(res)
+  }
 
-	invisible(path)
+  invisible(path)
 }

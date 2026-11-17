@@ -211,101 +211,101 @@ inline void SetKeyIndex(vector<int> &keyIndex, const int keyLength, const int nr
 
 unsigned int ReadChunkIndex(istream &myfile, const int nrOfCols, vector<FstChunk> &chunks)
 {
-	const uint64_t chunkIndexPos = myfile.tellg();
+  const uint64_t chunkIndexPos = myfile.tellg();
 
-	// read fixed part of chunk index
-	char indexHead[CHUNK_INDEX_HEAD];
-	myfile.read(indexHead, CHUNK_INDEX_HEAD);
+  // read fixed part of chunk index
+  char indexHead[CHUNK_INDEX_HEAD];
+  myfile.read(indexHead, CHUNK_INDEX_HEAD);
 
-	if (!myfile)
-	{
-		throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
-	}
+  if (!myfile)
+  {
+    throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
+  }
 
-	const unsigned short int nrOfChunkSlots = *reinterpret_cast<unsigned short int*>(&indexHead[24]);
+  const unsigned short int nrOfChunkSlots = *reinterpret_cast<unsigned short int*>(&indexHead[24]);
 
-	if (nrOfChunkSlots == 0)
-	{
-		throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
-	}
+  if (nrOfChunkSlots == 0)
+  {
+    throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
+  }
 
-	const uint64_t chunkIndexSize = CHUNK_INDEX_HEAD + 16 * static_cast<uint64_t>(nrOfChunkSlots);
-	std::unique_ptr<char[]> chunkIndexP(new char[chunkIndexSize]);
-	char* chunkIndex = chunkIndexP.get();
+  const uint64_t chunkIndexSize = CHUNK_INDEX_HEAD + 16 * static_cast<uint64_t>(nrOfChunkSlots);
+  std::unique_ptr<char[]> chunkIndexP(new char[chunkIndexSize]);
+  char* chunkIndex = chunkIndexP.get();
 
-	memcpy(chunkIndex, indexHead, CHUNK_INDEX_HEAD);
-	myfile.read(&chunkIndex[CHUNK_INDEX_HEAD], chunkIndexSize - CHUNK_INDEX_HEAD);
+  memcpy(chunkIndex, indexHead, CHUNK_INDEX_HEAD);
+  myfile.read(&chunkIndex[CHUNK_INDEX_HEAD], chunkIndexSize - CHUNK_INDEX_HEAD);
 
-	if (!myfile)
-	{
-		throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
-	}
+  if (!myfile)
+  {
+    throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
+  }
 
-	// check chunk index hash
-	const uint64_t* p_chunkIndexHash = reinterpret_cast<uint64_t*>(chunkIndex);
-	const uint64_t chunkIndexHash = ZSTD_XXH64(&chunkIndex[8], chunkIndexSize - 8, FST_HASH_SEED);
+  // check chunk index hash
+  const uint64_t* p_chunkIndexHash = reinterpret_cast<uint64_t*>(chunkIndex);
+  const uint64_t chunkIndexHash = ZSTD_XXH64(&chunkIndex[8], chunkIndexSize - 8, FST_HASH_SEED);
 
-	if (*p_chunkIndexHash != chunkIndexHash)
-	{
-		throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
-	}
+  if (*p_chunkIndexHash != chunkIndexHash)
+  {
+    throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
+  }
 
-	const uint64_t* p_nrOfChunks = reinterpret_cast<uint64_t*>(&chunkIndex[16]);
-	const uint64_t* p_chunkPos   = reinterpret_cast<uint64_t*>(&chunkIndex[CHUNK_INDEX_HEAD]);
-	const uint64_t* p_chunkRows  = reinterpret_cast<uint64_t*>(&chunkIndex[CHUNK_INDEX_HEAD + 8 * static_cast<uint64_t>(nrOfChunkSlots)]);
+  const uint64_t* p_nrOfChunks = reinterpret_cast<uint64_t*>(&chunkIndex[16]);
+  const uint64_t* p_chunkPos   = reinterpret_cast<uint64_t*>(&chunkIndex[CHUNK_INDEX_HEAD]);
+  const uint64_t* p_chunkRows  = reinterpret_cast<uint64_t*>(&chunkIndex[CHUNK_INDEX_HEAD + 8 * static_cast<uint64_t>(nrOfChunkSlots)]);
 
-	// legacy files (format v0.1) have a zero chunk count and a single chunk
-	const bool isLegacy = *p_nrOfChunks == 0;
-	const uint64_t nrOfChunks = isLegacy ? 1 : *p_nrOfChunks;
+  // legacy files (format v0.1) have a zero chunk count and a single chunk
+  const bool isLegacy = *p_nrOfChunks == 0;
+  const uint64_t nrOfChunks = isLegacy ? 1 : *p_nrOfChunks;
 
-	if (nrOfChunks > nrOfChunkSlots)
-	{
-		throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
-	}
+  if (nrOfChunks > nrOfChunkSlots)
+  {
+    throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
+  }
 
-	const uint64_t dataHeaderSize = DATA_INDEX_SIZE + 8 * static_cast<uint64_t>(nrOfCols);
-	std::unique_ptr<char[]> dataHeaderP(new char[dataHeaderSize]);
-	char* dataHeader = dataHeaderP.get();
+  const uint64_t dataHeaderSize = DATA_INDEX_SIZE + 8 * static_cast<uint64_t>(nrOfCols);
+  std::unique_ptr<char[]> dataHeaderP(new char[dataHeaderSize]);
+  char* dataHeader = dataHeaderP.get();
 
-	chunks.clear();
-	chunks.reserve(nrOfChunks);
+  chunks.clear();
+  chunks.reserve(nrOfChunks);
 
-	uint64_t firstRow = 0;
+  uint64_t firstRow = 0;
 
-	for (uint64_t chunkNr = 0; chunkNr < nrOfChunks; ++chunkNr)
-	{
-		FstChunk chunk;
+  for (uint64_t chunkNr = 0; chunkNr < nrOfChunks; ++chunkNr)
+  {
+    FstChunk chunk;
 
-		// legacy files have their (single) data chunk header directly after the chunk index
-		chunk.headerPos = isLegacy ? chunkIndexPos + chunkIndexSize : p_chunkPos[chunkNr];
-		chunk.nrOfRows  = p_chunkRows[chunkNr];
-		chunk.firstRow  = firstRow;
+    // legacy files have their (single) data chunk header directly after the chunk index
+    chunk.headerPos = isLegacy ? chunkIndexPos + chunkIndexSize : p_chunkPos[chunkNr];
+    chunk.nrOfRows  = p_chunkRows[chunkNr];
+    chunk.firstRow  = firstRow;
 
-		myfile.seekg(chunk.headerPos);
-		myfile.read(dataHeader, dataHeaderSize);
+    myfile.seekg(chunk.headerPos);
+    myfile.read(dataHeader, dataHeaderSize);
 
-		if (!myfile)
-		{
-			throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
-		}
+    if (!myfile)
+    {
+      throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
+    }
 
-		// Chunk data header [node E, leaf of D] [size: 24 + 8 * nrOfCols]
-		const uint64_t* p_chunkDataHash = reinterpret_cast<uint64_t*>(dataHeader);
-		const uint64_t chunkDataHash = ZSTD_XXH64(&dataHeader[8], dataHeaderSize - 8, FST_HASH_SEED);
+    // Chunk data header [node E, leaf of D] [size: 24 + 8 * nrOfCols]
+    const uint64_t* p_chunkDataHash = reinterpret_cast<uint64_t*>(dataHeader);
+    const uint64_t chunkDataHash = ZSTD_XXH64(&dataHeader[8], dataHeaderSize - 8, FST_HASH_SEED);
 
-		if (*p_chunkDataHash != chunkDataHash)
-		{
-			throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
-		}
+    if (*p_chunkDataHash != chunkDataHash)
+    {
+      throw(runtime_error(FSTERROR_DAMAGED_CHUNKINDEX));
+    }
 
-		const uint64_t* positionData = reinterpret_cast<uint64_t*>(&dataHeader[DATA_INDEX_SIZE]);
-		chunk.colPos.assign(positionData, positionData + nrOfCols);
+    const uint64_t* positionData = reinterpret_cast<uint64_t*>(&dataHeader[DATA_INDEX_SIZE]);
+    chunk.colPos.assign(positionData, positionData + nrOfCols);
 
-		firstRow += chunk.nrOfRows;
-		chunks.push_back(std::move(chunk));
-	}
+    firstRow += chunk.nrOfRows;
+    chunks.push_back(std::move(chunk));
+  }
 
-	return nrOfChunkSlots;
+  return nrOfChunkSlots;
 }
 
 
@@ -314,10 +314,10 @@ unsigned int ReadChunkIndex(istream &myfile, const int nrOfCols, vector<FstChunk
  */
 struct ChunkRange
 {
-	const FstChunk* chunk;  // chunk containing the rows
-	uint64_t startRow;      // zero-based first row within the chunk
-	uint64_t length;        // number of rows to read from the chunk
-	uint64_t destOffset;    // offset of the first row in the result vectors
+  const FstChunk* chunk;  // chunk containing the rows
+  uint64_t startRow;      // zero-based first row within the chunk
+  uint64_t length;        // number of rows to read from the chunk
+  uint64_t destOffset;    // offset of the first row in the result vectors
 };
 
 
@@ -329,30 +329,30 @@ struct ChunkRange
  */
 inline vector<ChunkRange> SelectChunkRanges(const vector<FstChunk> &chunks, const uint64_t firstRow, const uint64_t length)
 {
-	vector<ChunkRange> ranges;
+  vector<ChunkRange> ranges;
 
-	if (length == 0 || chunks.size() == 1)
-	{
-		ranges.push_back(ChunkRange{&chunks[0], firstRow, length, 0});
-		return ranges;
-	}
+  if (length == 0 || chunks.size() == 1)
+  {
+    ranges.push_back(ChunkRange{&chunks[0], firstRow, length, 0});
+    return ranges;
+  }
 
-	const uint64_t endRow = firstRow + length;  // one past last row
+  const uint64_t endRow = firstRow + length;  // one past last row
 
-	for (const FstChunk &chunk : chunks)
-	{
-		const uint64_t chunkEnd = chunk.firstRow + chunk.nrOfRows;
+  for (const FstChunk &chunk : chunks)
+  {
+    const uint64_t chunkEnd = chunk.firstRow + chunk.nrOfRows;
 
-		if (chunk.nrOfRows == 0 || chunkEnd <= firstRow) continue;
-		if (chunk.firstRow >= endRow) break;
+    if (chunk.nrOfRows == 0 || chunkEnd <= firstRow) continue;
+    if (chunk.firstRow >= endRow) break;
 
-		const uint64_t start = max(firstRow, chunk.firstRow);
-		const uint64_t end = min(endRow, chunkEnd);
+    const uint64_t start = max(firstRow, chunk.firstRow);
+    const uint64_t end = min(endRow, chunkEnd);
 
-		ranges.push_back(ChunkRange{&chunk, start - chunk.firstRow, end - start, start - firstRow});
-	}
+    ranges.push_back(ChunkRange{&chunk, start - chunk.firstRow, end - start, start - firstRow});
+  }
 
-	return ranges;
+  return ranges;
 }
 
 
@@ -363,28 +363,28 @@ inline vector<ChunkRange> SelectChunkRanges(const vector<FstChunk> &chunks, cons
  */
 class OffsetStringColumn : public IStringColumn
 {
-	IStringColumn* column;
-	uint64_t offset;
+  IStringColumn* column;
+  uint64_t offset;
 
 public:
 
-	OffsetStringColumn(IStringColumn* column, const uint64_t offset) : column(column), offset(offset) {}
+  OffsetStringColumn(IStringColumn* column, const uint64_t offset) : column(column), offset(offset) {}
 
-	~OffsetStringColumn() {}
+  ~OffsetStringColumn() {}
 
-	void AllocateVec(uint64_t vecLength) {}  // result column is already allocated
+  void AllocateVec(uint64_t vecLength) {}  // result column is already allocated
 
-	void SetEncoding(StringEncoding stringEncoding) { column->SetEncoding(stringEncoding); }
+  void SetEncoding(StringEncoding stringEncoding) { column->SetEncoding(stringEncoding); }
 
-	StringEncoding GetEncoding() { return column->GetEncoding(); }
+  StringEncoding GetEncoding() { return column->GetEncoding(); }
 
-	void BufferToVec(uint64_t nrOfElements, uint64_t startElem, uint64_t endElem,
-		uint64_t vecOffset, unsigned int* sizeMeta, char* buf)
-	{
-		column->BufferToVec(nrOfElements, startElem, endElem, vecOffset + offset, sizeMeta, buf);
-	}
+  void BufferToVec(uint64_t nrOfElements, uint64_t startElem, uint64_t endElem,
+    uint64_t vecOffset, unsigned int* sizeMeta, char* buf)
+  {
+    column->BufferToVec(nrOfElements, startElem, endElem, vecOffset + offset, sizeMeta, buf);
+  }
 
-	const char* GetElement(uint64_t elementNr) { return column->GetElement(elementNr + offset); }
+  const char* GetElement(uint64_t elementNr) { return column->GetElement(elementNr + offset); }
 };
 
 
@@ -399,160 +399,160 @@ public:
  * rows, just like for single chunk files.
  */
 void ReadFactorChunks(IFstTable &tableReader, istream &myfile, const vector<FstChunk> &chunks, const vector<ChunkRange> &ranges,
-	const int colNr, const uint64_t length, const FstColumnAttribute colAttribute, IColumnFactory* columnFactory, const int colSel)
+  const int colNr, const uint64_t length, const FstColumnAttribute colAttribute, IColumnFactory* columnFactory, const int colSel)
 {
-	const size_t nrOfChunks = chunks.size();
+  const size_t nrOfChunks = chunks.size();
 
-	vector<uint64_t> levelVecPos(nrOfChunks);
-	vector<unsigned int> nrOfLevels(nrOfChunks);
-	vector<StdStringColumn> chunkLevels(nrOfChunks);
+  vector<uint64_t> levelVecPos(nrOfChunks);
+  vector<unsigned int> nrOfLevels(nrOfChunks);
+  vector<StdStringColumn> chunkLevels(nrOfChunks);
 
-	// read factor levels of all chunks
-	for (size_t chunkNr = 0; chunkNr < nrOfChunks; ++chunkNr)
-	{
-		const uint64_t blockPos = chunks[chunkNr].colPos[colNr];
+  // read factor levels of all chunks
+  for (size_t chunkNr = 0; chunkNr < nrOfChunks; ++chunkNr)
+  {
+    const uint64_t blockPos = chunks[chunkNr].colPos[colNr];
 
-		char meta[HEADER_SIZE_FACTOR_V7];
-		myfile.seekg(blockPos);
-		myfile.read(meta, HEADER_SIZE_FACTOR_V7);
+    char meta[HEADER_SIZE_FACTOR_V7];
+    myfile.seekg(blockPos);
+    myfile.read(meta, HEADER_SIZE_FACTOR_V7);
 
-		const unsigned int versionNr = *reinterpret_cast<unsigned int*>(meta);
+    const unsigned int versionNr = *reinterpret_cast<unsigned int*>(meta);
 
-		if (versionNr > 1)
-		{
-			throw runtime_error("Incompatible fst file.");
-		}
+    if (versionNr > 1)
+    {
+      throw runtime_error("Incompatible fst file.");
+    }
 
-		nrOfLevels[chunkNr] = *reinterpret_cast<unsigned int*>(&meta[4]);
-		levelVecPos[chunkNr] = *reinterpret_cast<uint64_t*>(&meta[8]);
+    nrOfLevels[chunkNr] = *reinterpret_cast<unsigned int*>(&meta[4]);
+    levelVecPos[chunkNr] = *reinterpret_cast<uint64_t*>(&meta[8]);
 
-		chunkLevels[chunkNr].AllocateVec(nrOfLevels[chunkNr]);
+    chunkLevels[chunkNr].AllocateVec(nrOfLevels[chunkNr]);
 
-		if (nrOfLevels[chunkNr] > 0)
-		{
-			fdsReadCharVec_v6(myfile, &chunkLevels[chunkNr], blockPos + HEADER_SIZE_FACTOR_V7, 0, nrOfLevels[chunkNr], nrOfLevels[chunkNr]);
-		}
-	}
+    if (nrOfLevels[chunkNr] > 0)
+    {
+      fdsReadCharVec_v6(myfile, &chunkLevels[chunkNr], blockPos + HEADER_SIZE_FACTOR_V7, 0, nrOfLevels[chunkNr], nrOfLevels[chunkNr]);
+    }
+  }
 
-	// merge levels
-	vector<const string*> mergedLevels;
-	vector<StringEncoding> mergedEncodings;
-	std::unordered_map<string, int> levelIndex;
-	vector<vector<int>> levelMap(nrOfChunks);  // chunk level (zero based) to merged level (zero based)
-	bool identicalLevels = true;
+  // merge levels
+  vector<const string*> mergedLevels;
+  vector<StringEncoding> mergedEncodings;
+  std::unordered_map<string, int> levelIndex;
+  vector<vector<int>> levelMap(nrOfChunks);  // chunk level (zero based) to merged level (zero based)
+  bool identicalLevels = true;
 
-	for (size_t chunkNr = 0; chunkNr < nrOfChunks; ++chunkNr)
-	{
-		const vector<string> &levels = chunkLevels[chunkNr].values;
-		levelMap[chunkNr].resize(levels.size());
+  for (size_t chunkNr = 0; chunkNr < nrOfChunks; ++chunkNr)
+  {
+    const vector<string> &levels = chunkLevels[chunkNr].values;
+    levelMap[chunkNr].resize(levels.size());
 
-		if (levels.size() != chunkLevels[0].values.size()) identicalLevels = false;
+    if (levels.size() != chunkLevels[0].values.size()) identicalLevels = false;
 
-		for (size_t level = 0; level < levels.size(); ++level)
-		{
-			auto it = levelIndex.find(levels[level]);
-			int index;
+    for (size_t level = 0; level < levels.size(); ++level)
+    {
+      auto it = levelIndex.find(levels[level]);
+      int index;
 
-			if (it == levelIndex.end())
-			{
-				index = static_cast<int>(mergedLevels.size());
-				levelIndex.emplace(levels[level], index);
-				mergedLevels.push_back(&levels[level]);
-				mergedEncodings.push_back(chunkLevels[chunkNr].GetEncoding());
-			}
-			else
-			{
-				index = it->second;
-			}
+      if (it == levelIndex.end())
+      {
+        index = static_cast<int>(mergedLevels.size());
+        levelIndex.emplace(levels[level], index);
+        mergedLevels.push_back(&levels[level]);
+        mergedEncodings.push_back(chunkLevels[chunkNr].GetEncoding());
+      }
+      else
+      {
+        index = it->second;
+      }
 
-			levelMap[chunkNr][level] = index;
-			if (index != static_cast<int>(level)) identicalLevels = false;
-		}
-	}
+      levelMap[chunkNr][level] = index;
+      if (index != static_cast<int>(level)) identicalLevels = false;
+    }
+  }
 
-	const uint64_t nrOfMergedLevels = mergedLevels.size();
+  const uint64_t nrOfMergedLevels = mergedLevels.size();
 
-	std::unique_ptr<IFactorColumn> factorColumnP(columnFactory->CreateFactorColumn(length, nrOfMergedLevels, colAttribute));
-	IFactorColumn* factorColumn = factorColumnP.get();
+  std::unique_ptr<IFactorColumn> factorColumnP(columnFactory->CreateFactorColumn(length, nrOfMergedLevels, colAttribute));
+  IFactorColumn* factorColumn = factorColumnP.get();
 
-	// add to table
-	tableReader.SetFactorColumn(factorColumn, colSel);
+  // add to table
+  tableReader.SetFactorColumn(factorColumn, colSel);
 
-	// set merged levels, in runs of identical string encoding
-	IStringColumn* levelColumn = factorColumn->Levels();
+  // set merged levels, in runs of identical string encoding
+  IStringColumn* levelColumn = factorColumn->Levels();
 
-	uint64_t runStart = 0;
-	while (runStart < nrOfMergedLevels)
-	{
-		uint64_t runEnd = runStart + 1;
-		while (runEnd < nrOfMergedLevels && mergedEncodings[runEnd] == mergedEncodings[runStart]) ++runEnd;
+  uint64_t runStart = 0;
+  while (runStart < nrOfMergedLevels)
+  {
+    uint64_t runEnd = runStart + 1;
+    while (runEnd < nrOfMergedLevels && mergedEncodings[runEnd] == mergedEncodings[runStart]) ++runEnd;
 
-		const uint64_t runLength = runEnd - runStart;
+    const uint64_t runLength = runEnd - runStart;
 
-		// size meta data: cumulative string sizes followed by NA bits (all zero, levels can't be NA)
-		vector<unsigned int> sizeMeta(runLength + 1 + runLength / 32, 0);
-		string buf;
+    // size meta data: cumulative string sizes followed by NA bits (all zero, levels can't be NA)
+    vector<unsigned int> sizeMeta(runLength + 1 + runLength / 32, 0);
+    string buf;
 
-		for (uint64_t level = 0; level < runLength; ++level)
-		{
-			buf += *mergedLevels[runStart + level];
-			sizeMeta[level] = static_cast<unsigned int>(buf.size());
-		}
+    for (uint64_t level = 0; level < runLength; ++level)
+    {
+      buf += *mergedLevels[runStart + level];
+      sizeMeta[level] = static_cast<unsigned int>(buf.size());
+    }
 
-		buf += '\0';  // guarantee a valid buffer pointer for empty strings
+    buf += '\0';  // guarantee a valid buffer pointer for empty strings
 
-		levelColumn->SetEncoding(mergedEncodings[runStart]);
-		levelColumn->BufferToVec(runLength, 0, runLength - 1, runStart, sizeMeta.data(), &buf[0]);
+    levelColumn->SetEncoding(mergedEncodings[runStart]);
+    levelColumn->BufferToVec(runLength, 0, runLength - 1, runStart, sizeMeta.data(), &buf[0]);
 
-		runStart = runEnd;
-	}
+    runStart = runEnd;
+  }
 
-	// read level codes
-	int* intP = factorColumn->LevelData();
-	const int naInt = static_cast<int>(FST_NA_INT);
+  // read level codes
+  int* intP = factorColumn->LevelData();
+  const int naInt = static_cast<int>(FST_NA_INT);
 
-	for (const ChunkRange &range : ranges)
-	{
-		const size_t chunkNr = static_cast<size_t>(range.chunk - chunks.data());
-		int* dest = intP + range.destOffset;
+  for (const ChunkRange &range : ranges)
+  {
+    const size_t chunkNr = static_cast<size_t>(range.chunk - chunks.data());
+    int* dest = intP + range.destOffset;
 
-		if (range.length == 0) continue;
+    if (range.length == 0) continue;
 
-		if (nrOfLevels[chunkNr] == 0)
-		{
-			// all level values must be NA
-			for (uint64_t pos = 0; pos < range.length; ++pos)
-			{
-				dest[pos] = naInt;
-			}
+    if (nrOfLevels[chunkNr] == 0)
+    {
+      // all level values must be NA
+      for (uint64_t pos = 0; pos < range.length; ++pos)
+      {
+        dest[pos] = naInt;
+      }
 
-			continue;
-		}
+      continue;
+    }
 
-		std::string annotation;
-		bool hasAnnotation;
+    std::string annotation;
+    bool hasAnnotation;
 
-		fdsReadColumn_v2(myfile, reinterpret_cast<char*>(dest), levelVecPos[chunkNr], range.startRow, range.length,
-			range.chunk->nrOfRows, 4, annotation, BATCH_SIZE_READ_FACTOR, hasAnnotation);
+    fdsReadColumn_v2(myfile, reinterpret_cast<char*>(dest), levelVecPos[chunkNr], range.startRow, range.length,
+      range.chunk->nrOfRows, 4, annotation, BATCH_SIZE_READ_FACTOR, hasAnnotation);
 
-		if (identicalLevels) continue;
+    if (identicalLevels) continue;
 
-		// remap level codes to merged levels
-		const vector<int> &map = levelMap[chunkNr];
+    // remap level codes to merged levels
+    const vector<int> &map = levelMap[chunkNr];
 
-		for (uint64_t pos = 0; pos < range.length; ++pos)
-		{
-			const int code = dest[pos];
-			if (code == naInt || code <= 0) continue;
+    for (uint64_t pos = 0; pos < range.length; ++pos)
+    {
+      const int code = dest[pos];
+      if (code == naInt || code <= 0) continue;
 
-			if (code > static_cast<int>(map.size()))
-			{
-				throw(runtime_error(FSTERROR_DAMAGED_METADATA));
-			}
+      if (code > static_cast<int>(map.size()))
+      {
+        throw(runtime_error(FSTERROR_DAMAGED_METADATA));
+      }
 
-			dest[pos] = map[code - 1] + 1;
-		}
-	}
+      dest[pos] = map[code - 1] + 1;
+    }
+  }
 }
 
 

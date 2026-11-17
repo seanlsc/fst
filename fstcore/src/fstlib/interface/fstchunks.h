@@ -49,10 +49,10 @@
  */
 struct FstChunk
 {
-	uint64_t headerPos;            // absolute position of the data chunk header [node E]
-	uint64_t nrOfRows;             // number of rows in the chunk
-	uint64_t firstRow;             // zero-based table row of the first chunk row
-	std::vector<uint64_t> colPos;  // absolute position of the column data of each column
+  uint64_t headerPos;            // absolute position of the data chunk header [node E]
+  uint64_t nrOfRows;             // number of rows in the chunk
+  uint64_t firstRow;             // zero-based table row of the first chunk row
+  std::vector<uint64_t> colPos;  // absolute position of the column data of each column
 };
 
 
@@ -74,55 +74,55 @@ unsigned int ReadChunkIndex(std::istream &myfile, int nrOfCols, std::vector<FstC
  */
 class StdStringColumn : public IStringColumn
 {
-	StringEncoding encoding = StringEncoding::NATIVE;
+  StringEncoding encoding = StringEncoding::NATIVE;
 
 public:
 
-	std::vector<std::string> values;
-	std::vector<bool> isNA;
+  std::vector<std::string> values;
+  std::vector<bool> isNA;
 
-	~StdStringColumn() {}
+  ~StdStringColumn() {}
 
-	void AllocateVec(uint64_t vecLength)
-	{
-		values.assign(vecLength, std::string());
-		isNA.assign(vecLength, false);
-	}
+  void AllocateVec(uint64_t vecLength)
+  {
+    values.assign(vecLength, std::string());
+    isNA.assign(vecLength, false);
+  }
 
-	void SetEncoding(StringEncoding stringEncoding) { encoding = stringEncoding; }
+  void SetEncoding(StringEncoding stringEncoding) { encoding = stringEncoding; }
 
-	StringEncoding GetEncoding() { return encoding; }
+  StringEncoding GetEncoding() { return encoding; }
 
-	void BufferToVec(uint64_t nrOfElements, uint64_t startElem, uint64_t endElem,
-		uint64_t vecOffset, unsigned int* sizeMeta, char* buf)
-	{
-		const uint64_t nrOfNAInts = 1 + nrOfElements / 32;  // last bit is NA flag
-		const unsigned int* bitsNA = &sizeMeta[nrOfElements];
-		const bool hasNA = (bitsNA[nrOfNAInts - 1] & (1u << (nrOfElements % 32))) != 0;
+  void BufferToVec(uint64_t nrOfElements, uint64_t startElem, uint64_t endElem,
+    uint64_t vecOffset, unsigned int* sizeMeta, char* buf)
+  {
+    const uint64_t nrOfNAInts = 1 + nrOfElements / 32;  // last bit is NA flag
+    const unsigned int* bitsNA = &sizeMeta[nrOfElements];
+    const bool hasNA = (bitsNA[nrOfNAInts - 1] & (1u << (nrOfElements % 32))) != 0;
 
-		uint64_t pos = startElem == 0 ? 0 : sizeMeta[startElem - 1];
+    uint64_t pos = startElem == 0 ? 0 : sizeMeta[startElem - 1];
 
-		for (uint64_t blockElem = startElem; blockElem <= endElem; ++blockElem)
-		{
-			const uint64_t newPos = sizeMeta[blockElem];
-			const uint64_t index = vecOffset + blockElem - startElem;
+    for (uint64_t blockElem = startElem; blockElem <= endElem; ++blockElem)
+    {
+      const uint64_t newPos = sizeMeta[blockElem];
+      const uint64_t index = vecOffset + blockElem - startElem;
 
-			if (hasNA && (bitsNA[blockElem / 32] & (1u << (blockElem % 32))) != 0)
-			{
-				values[index].clear();
-				isNA[index] = true;
-			}
-			else
-			{
-				values[index].assign(buf + pos, newPos - pos);
-				isNA[index] = false;
-			}
+      if (hasNA && (bitsNA[blockElem / 32] & (1u << (blockElem % 32))) != 0)
+      {
+        values[index].clear();
+        isNA[index] = true;
+      }
+      else
+      {
+        values[index].assign(buf + pos, newPos - pos);
+        isNA[index] = false;
+      }
 
-			pos = newPos;
-		}
-	}
+      pos = newPos;
+    }
+  }
 
-	const char* GetElement(uint64_t elementNr) { return values[elementNr].c_str(); }
+  const char* GetElement(uint64_t elementNr) { return values[elementNr].c_str(); }
 };
 
 
